@@ -1,6 +1,6 @@
 """
 Game Hi-Low
-Version: 0.02
+Version: 0.03
 """
 
 from random import randint, choice
@@ -42,19 +42,50 @@ class beautiful_hilo:
         rows = len(card_grid)
         columns = len(card_grid[0])
 
-        for row in card_grid:
-            print(columns * "+-----" + "+")
-            for c in row:
-                print(f"|{self.get_color_code(c)}     {Back.RESET}", end="")
-            print("|")
-            for c in row:
-                print(f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET}", end="")
-            print("|")
-            for c in row:
-                print(f"|{self.get_color_code(c)}     {Back.RESET}", end="")
-            print("|")
+        string_grid = ""
 
-        print(columns * "+-----" + "+")
+        for row in card_grid:
+            string_grid = string_grid + columns * "+-----" + "+\n"
+            for c in row:
+                string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+            string_grid = string_grid + "|\n"
+            for c in row:
+                string_grid = string_grid + f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET}"
+            string_grid = string_grid + "|\n"
+            for c in row:
+                string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+            string_grid = string_grid + "|\n"
+
+        string_grid = string_grid + columns * "+-----" + "+"
+
+        print(string_grid)
+
+    def print_grids(self, card_grids: list):
+        "Print three arranged, colored card grids in one line"
+
+        string_grids = []
+        for card_grid in card_grids:
+            rows = len(card_grid)
+            columns = len(card_grid[0])
+            string_grid = ""
+            for row in card_grid:
+                string_grid = string_grid + columns * "+-----" + "+\n"
+                for c in row:
+                    string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+                string_grid = string_grid + "|\n"
+                for c in row:
+                    string_grid = string_grid + f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET}"
+                string_grid = string_grid + "|\n"
+                for c in row:
+                    string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+                string_grid = string_grid + "|\n"
+            string_grid = string_grid + columns * "+-----" + "+"
+            string_grids.append(string_grid)
+
+        player = [0, 1, 2]
+        lines = [string_grids[i].splitlines() for i in player]
+        for l in zip(*lines):
+            print(*l, sep='     ')
 
     def print_card(self, card):
         print("+-----+")
@@ -87,9 +118,11 @@ class card:
 class player:
     card_grid = []
     points = 0
+    name = ""
 
-    def __init__(self, points):
+    def __init__(self, points, name):
         self.points = points
+        self.name = name
 
     def print_card_grid(self):
         for row in self.card_grid:
@@ -114,6 +147,8 @@ class game:
     game_on = True
     round_on = True
 
+    gameprint = beautiful_hilo()
+
     """
     General Functions
     """
@@ -132,7 +167,7 @@ class game:
     def start_game(self, no_players):
         """Initate Players and points"""
         for i in range(no_players):
-            self.players.append(player(0))
+            self.players.append(player(0, str(i)))
 
         self.gameloop()  # Start game
 
@@ -156,20 +191,54 @@ class game:
     def start_round(self):
         """Initiate cards and players at the start of a round"""
         for current_player in self.players:  # Initiate each players cardgrid with random cards
+            current_card_grid = []
             for h in range(self.card_grid_height):
                 current_row = []
                 for w in range(self.card_grid_width):
-                    current_row.append(self.random_card())
-                current_player.card_grid.append(current_row)
+                    current_row.append(self.random_card(False))
+                current_card_grid.append(current_row)
+            current_player.card_grid = current_card_grid
 
+        self.open_stack_card = self.random_card(True)
         self.roundloop()
 
-    def check_round_on(self):
-        """Check if round is over"""
-        pass
-
     def turn(self, player: player):
-        pass
+        """Player Interaction"""
+
+        """STAGE 0: Output"""
+        print("Cards of your opponents:")
+        self.print_other_player_grids(player)
+        print(f"Cards of Player: {player.name}")
+        self.gameprint.print_card_grid(player.card_grid)
+        print("Open card stack:")
+        self.gameprint.print_card(self.open_stack_card)
+
+        """STAGE 1: Take open card or draw random card"""
+        valid = False  # Input validation
+        while not valid:  # ^^^
+            action = input("Do you want to take the open card (o) or draw a new one (d)? >")
+            if action == "o":
+                self.switch_cards()
+                valid = True
+            elif action == "d":
+                self.draw()
+                valid = True
+            else:
+                print(f"Invalid input: <{action}>. Use <o> or <d>")
+                valid == False
+
+    def print_other_player_grids(self, current_player):
+        """Print grids of other all players"""
+        other_players = []
+        for p in self.players:
+            if not p.name == current_player.name:
+                other_players.append(p)
+
+        other_player_grids = []
+        for p in other_players:
+            other_player_grids.append(p.card_grid)
+
+        self.gameprint.print_grids(other_player_grids)
 
     def roundloop(self):
         """Roundloop"""
@@ -179,10 +248,4 @@ class game:
                 self.turn(current_player)
 
 
-"""
 mygame = game()
-
-# DEBUG
-for p in game.players:
-    p.print_card_grid()
-"""
