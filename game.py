@@ -4,6 +4,64 @@ Version: 0.02
 """
 
 from random import randint, choice
+from colorama import Back
+
+
+class beautiful_hilo:
+    """Pint beatiful and clearly arranged views of hilo"""
+
+    colors = [["red", Back.RED],
+              ["orange", Back.LIGHTRED_EX],
+              ["green", Back.GREEN],
+              ["lime", Back.LIGHTGREEN_EX],
+              ["yellow", Back.YELLOW],
+              ["blue", Back.BLUE],
+              ["cyan", Back.LIGHTBLUE_EX],
+              ["pink", Back.LIGHTMAGENTA_EX]]
+
+    def __init__(self):
+        pass
+
+    def get_color_code(self, card):
+        if not card.revealed:
+            return Back.BLACK
+        for code in self.colors:
+            if card.color == code[0]:
+                return code[1]
+
+    def get_value_code(self, card):
+        if not card.revealed:
+            return "##"
+        if len(str(card.value)) == 1:
+            return " " + str(card.value)
+        else:
+            return str(card.value)
+
+    def print_card_grid(self, card_grid: list):
+        """Print an arranged, colored card grid"""
+        rows = len(card_grid)
+        columns = len(card_grid[0])
+
+        for row in card_grid:
+            print(columns * "+-----" + "+")
+            for c in row:
+                print(f"|{self.get_color_code(c)}     {Back.RESET}", end="")
+            print("|")
+            for c in row:
+                print(f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET}", end="")
+            print("|")
+            for c in row:
+                print(f"|{self.get_color_code(c)}     {Back.RESET}", end="")
+            print("|")
+
+        print(columns * "+-----" + "+")
+
+    def print_card(self, card):
+        print("+-----+")
+        print(f"|{self.get_color_code(card)}     {Back.RESET}|")
+        print(f"|{self.get_color_code(card)} {self.get_value_code(card)}  {Back.RESET}|")
+        print(f"|{self.get_color_code(card)}     {Back.RESET}|")
+        print("+-----+")
 
 
 class card:
@@ -121,8 +179,10 @@ class game:
                 self.turn(current_player)
 
 
+"""
 mygame = game()
 
 # DEBUG
 for p in game.players:
     p.print_card_grid()
+"""
