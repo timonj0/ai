@@ -37,8 +37,14 @@ class game:
     card_grid_width = 3
     card_grid_height = 3
 
+    open_stack_card = ""  # Top card from the revealed stack
+    closed_stack_card = ""  # Top card from the unrevealed stack
+
     def __init__(self, no_players=4):
         self.start_game(no_players)
+
+    def random_card(self, revealed=True):
+        return card(choice(self.colors), choice(self.values), revealed)
 
     def start_game(self, no_players):
         for i in range(no_players):
@@ -48,7 +54,7 @@ class game:
             for h in range(self.card_grid_height):
                 current_row = []
                 for w in range(self.card_grid_width):
-                    current_row.append(card(choice(self.colors), choice(self.values), False))
+                    current_row.append(self.__random_card__())
                 current_player.card_grid.append(current_row)
             self.players.append(current_player)
 
