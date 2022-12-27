@@ -10,6 +10,8 @@ from colorama import Back
 class beautiful_hilo:
     """Pint beatiful and clearly arranged views of hilo"""
 
+    SUPER_VISION = True  # Shows all cards, even if not revealed
+
     colors = [["red", Back.RED],
               ["orange", Back.LIGHTRED_EX],
               ["green", Back.GREEN],
@@ -23,14 +25,14 @@ class beautiful_hilo:
         pass
 
     def get_color_code(self, card):
-        if not card.revealed:
+        if not card.revealed and not self.SUPER_VISION:
             return Back.BLACK
         for code in self.colors:
             if card.color == code[0]:
                 return code[1]
 
     def get_value_code(self, card):
-        if not card.revealed:
+        if not card.revealed and not self.SUPER_VISION:
             return "##"
         if len(str(card.value)) == 1:
             return " " + str(card.value)
@@ -60,14 +62,19 @@ class beautiful_hilo:
 
         print(string_grid)
 
-    def print_grids(self, card_grids: list):
-        "Print three arranged, colored card grids in one line"
+    def print_grids(self, card_grids: list, titles: list):
+        "Print three arranged, colored card grids with titles in one line"
 
         string_grids = []
         for card_grid in card_grids:
             rows = len(card_grid)
             columns = len(card_grid[0])
+            grid_length = columns * 6 + 1
+            title = titles[card_grids.index(card_grid)]
+            title_line = title + " " * (grid_length - len(title)) + "\n"
+
             string_grid = ""
+            string_grid = string_grid + title_line
             for row in card_grid:
                 string_grid = string_grid + columns * "+-----" + "+\n"
                 for c in row:
@@ -100,10 +107,13 @@ class card:
     value = ""
     revealed = False
 
-    def __init__(self, color, value, revealed):
+    def __init__(self, color, value, revealed=True):
         self.color = color
         self.value = value
         self.revealed = revealed
+
+    def __str__(self) -> str:
+        return self.color + self.value
 
     def reveal(self):
         self.revealed = True
@@ -120,15 +130,17 @@ class player:
     points = 0
     name = ""
 
+    NAME_MAX_LEN = 10
+
     def __init__(self, points, name):
         self.points = points
-        self.name = name
+        if len(name) <= self.NAME_MAX_LEN:  # Validate Playername
+            self.name = name
+        else:
+            raise Exception(f"Playername is too long! (Max length: {self.NAME_MAX_LEN})")
 
-    def print_card_grid(self):
-        for row in self.card_grid:
-            for c in row:
-                print(c.as_list(), end='   ')
-            print("\n")
+    def __str__(self) -> str:
+        return self.name + self.points
 
 
 class game:
@@ -159,6 +171,19 @@ class game:
     def random_card(self, revealed=True):
         """Return a random card"""
         return card(choice(self.colors), choice(self.values), revealed)
+
+    def print_other_player_grids(self, current_player):
+        """Print grids of other all players"""
+        other_players = []
+        for p in self.players:
+            if not p.name == current_player.name:
+                other_players.append(p)
+        other_player_grids = []
+        other_player_names = []
+        for p in other_players:
+            other_player_grids.append(p.card_grid)
+            other_player_names.append((p.name))
+        self.gameprint.print_grids(other_player_grids, other_player_names)
 
     """
     Game Functions
@@ -218,27 +243,49 @@ class game:
         while not valid:  # ^^^
             action = input("Do you want to take the open card (o) or draw a new one (d)? >")
             if action == "o":
-                self.switch_cards()
+                nr_valid = False
+                while not nr_valid:
+                    card_nr = input(
+                        f"Which card do you want to switch with? (Cards are numbered left to right, top to bottom) >")
+                    try:
+                        card_nr = int(card_nr)
+                        nr_valid = True
+                    except:
+                        print("Input must be a number. Cards are numbered left to right, top to bottom")
+                self.switch_cards(player.card_grid, card_nr, self.open_stack_card)
                 valid = True
             elif action == "d":
-                self.draw()
+                self.draw()  # TODO
                 valid = True
             else:
                 print(f"Invalid input: <{action}>. Use <o> or <d>")
                 valid == False
 
-    def print_other_player_grids(self, current_player):
-        """Print grids of other all players"""
-        other_players = []
-        for p in self.players:
-            if not p.name == current_player.name:
-                other_players.append(p)
+    def switch_cards(self, cardgrid: list, card_nr: int, card_1: card):
+        """Switch value and color of a card from a cardgrid with another card"""
+        """Cards are numbered left to right, top to bottom"""
+        counter = 1
+        card_2 = -1
+        for row in cardgrid:  # Get card to switch with from cardgrid
+            for c in row:
+                if counter == card_nr:
+                    card_2 = c
+                counter = counter + 1
 
-        other_player_grids = []
-        for p in other_players:
-            other_player_grids.append(p.card_grid)
+        if card_2 == -1:  # Validate card exists
+            raise Exception(f"Card: {card_nr} is not in cardgrid")
 
-        self.gameprint.print_grids(other_player_grids)
+        c1_c = card_1.color
+        c1_v = card_1.value
+        card_1.color = card_2.color
+        card_1.value = card_2.value
+        card_1.reveal()
+        card_2.color = c1_c
+        card_2.value = c1_v
+        card_2.reveal()
+
+    def draw(self):
+        pass
 
     def roundloop(self):
         """Roundloop"""
