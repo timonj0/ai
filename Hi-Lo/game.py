@@ -1,10 +1,10 @@
 """
-Game Hi-Low
+Game Hi-Lo
 Version: 0.1
 """
 
 from random import randint, choice
-from colorama import Back
+from colorama import Back, Style
 
 
 class beautiful_hilo:
@@ -12,13 +12,13 @@ class beautiful_hilo:
 
     SUPER_VISION = False  # Shows all cards, even if not revealed
 
-    colors = [["red", Back.RED],
-              ["orange", Back.LIGHTRED_EX],
-              ["green", Back.GREEN],
-              ["lime", Back.LIGHTGREEN_EX],
+    colors = [["red", Back.RED + Style.DIM],
+              ["orange", Back.LIGHTRED_EX + Style.BRIGHT],
+              ["green", Back.GREEN + Style.DIM],
+              ["lime", Back.LIGHTGREEN_EX + Style.BRIGHT],
               ["yellow", Back.YELLOW],
-              ["blue", Back.BLUE],
-              ["cyan", Back.LIGHTBLUE_EX],
+              ["blue", Back.BLUE + Style.DIM],
+              ["cyan", Back.LIGHTBLUE_EX + Style.BRIGHT],
               ["pink", Back.LIGHTMAGENTA_EX]]
 
     def __init__(self):
@@ -49,13 +49,14 @@ class beautiful_hilo:
         for row in card_grid:
             string_grid = string_grid + columns * "+-----" + "+\n"
             for c in row:
-                string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+                string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET + Style.RESET_ALL}"
             string_grid = string_grid + "|\n"
             for c in row:
-                string_grid = string_grid + f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET}"
+                string_grid = string_grid + \
+                    f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET + Style.RESET_ALL}"
             string_grid = string_grid + "|\n"
             for c in row:
-                string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+                string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET + Style.RESET_ALL}"
             string_grid = string_grid + "|\n"
 
         string_grid = string_grid + columns * "+-----" + "+"
@@ -65,28 +66,35 @@ class beautiful_hilo:
     def print_card_grids(self, card_grids: list, titles: list):
         "Print three arranged, colored card grids with titles in one line"
 
+        max_rows = 0
+        for card_grid in card_grids:  # Find tallest grid
+            if len(card_grid) > max_rows:
+                max_rows = len(card_grid)
+
         string_grids = []
         for card_grid in card_grids:
             rows = len(card_grid)
+            ghost_rows = max_rows - rows
             columns = len(card_grid[0])
             grid_length = columns * 6 + 1
             title = titles[card_grids.index(card_grid)]
             title_line = title + " " * (grid_length - len(title)) + "\n"
+            ghost_row = (" " * (6 * columns + 1) + "\n") * 4
+            string_grid = title_line + ghost_rows * ghost_row
 
-            string_grid = ""
-            string_grid = string_grid + title_line
             for row in card_grid:
                 string_grid = string_grid + columns * "+-----" + "+\n"
                 for c in row:
-                    string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+                    string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET + Style.RESET_ALL}"
                 string_grid = string_grid + "|\n"
                 for c in row:
-                    string_grid = string_grid + f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET}"
+                    string_grid = string_grid + \
+                        f"|{self.get_color_code(c)} {self.get_value_code(c)}  {Back.RESET + Style.RESET_ALL}"
                 string_grid = string_grid + "|\n"
                 for c in row:
-                    string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET}"
+                    string_grid = string_grid + f"|{self.get_color_code(c)}     {Back.RESET + Style.RESET_ALL}"
                 string_grid = string_grid + "|\n"
-            string_grid = string_grid + columns * "+-----" + "+"
+            string_grid = string_grid + columns * "+-----" + "+\n"
             string_grids.append(string_grid)
 
         player = list(range(0, len(string_grids)))
@@ -96,9 +104,9 @@ class beautiful_hilo:
 
     def print_card(self, card: list):
         card_string = f"""+-----+
-        |{self.get_color_code(card)}     {Back.RESET}|
-        |{self.get_color_code(card)} {self.get_value_code(card)}  {Back.RESET}|
-        |{self.get_color_code(card)}     {Back.RESET}|
+        |{self.get_color_code(card)}     {Back.RESET + Style.RESET_ALL}|
+        |{self.get_color_code(card)} {self.get_value_code(card)}  {Back.RESET + Style.RESET_ALL}|
+        |{self.get_color_code(card)}     {Back.RESET + Style.RESET_ALL}|
         +-----+
         """
 
@@ -108,9 +116,9 @@ class beautiful_hilo:
             card_string = titles[cards.index(card)] + " " * (7 - len(titles[cards.index(card)])) + "\n"
             card_string = card_string + \
                 f"+-----+" + \
-                f"\n|{self.get_color_code(card)}     {Back.RESET}|" + \
-                f"\n|{self.get_color_code(card)} {self.get_value_code(card)}  {Back.RESET}|" + \
-                f"\n|{self.get_color_code(card)}     {Back.RESET}|" + \
+                f"\n|{self.get_color_code(card)}     {Back.RESET + Style.RESET_ALL}|" + \
+                f"\n|{self.get_color_code(card)} {self.get_value_code(card)}  {Back.RESET + Style.RESET_ALL}|" + \
+                f"\n|{self.get_color_code(card)}     {Back.RESET + Style.RESET_ALL}|" + \
                 f"\n+-----+"
 
             string_cards.append(card_string)
@@ -177,6 +185,8 @@ class game:
 
     game_on = True
     round_on = True
+
+    game_ender = ""
 
     gameprint = beautiful_hilo()
 
@@ -283,6 +293,7 @@ class game:
                         self.open_stack_card.color = self.closed_stack_card.color
                         self.open_stack_card.value = self.closed_stack_card.value
                         self.reveal_card(player.card_grid)
+                        b_valid = True
                     else:
                         print(f"Invalid input: <{action}>. Use <d> or <x>")
                 valid = True
@@ -325,6 +336,7 @@ class game:
         card_2.reveal()
 
     def reveal_card(self, card_grid: list):
+        """Reveal a card after player input"""
         nr_valid = False
         while not nr_valid:
             card_nr = input(
@@ -348,12 +360,58 @@ class game:
 
         card.reveal()
 
+    def check_line(self, player: player):
+        """Check for lines in a players card grid and remove them"""
+
+        #
+        # HORIZONTAL
+        #
+        for row in player.card_grid:
+            revealed = True
+            row_colors = []
+            for card in row:
+                if card.revealed:
+                    row_colors.append(card.color)
+                else:
+                    revealed = False
+            if len(set(row_colors)) == 1 and revealed:
+                player.card_grid.pop(player.card_grid.index(row))
+                return
+
+        #
+        # VERTICAL
+        #
+        for i in range(len(player.card_grid[0])):
+            revealed = True
+            column_colors = []
+            column_cards = []
+            for row in player.card_grid:
+                column_cards.append(row[i])
+            for card in column_cards:
+                if card.revealed:
+                    column_colors.append(card.color)
+                else:
+                    revealed = False
+            if len(set(column_colors)) == 1 and revealed:
+                for row in player.card_grid:
+                    row.pop(row.index(row[i]))
+                return
+
+    def check_round_on(self, player: player) -> bool:
+        """Check if the round is still going or if the player ended it"""
+
+        for row in player.card_grid:  # Check if all cards are revealed
+            for c in row:
+                if not card.revealed:
+                    return True
+
     def roundloop(self):
         """Roundloop"""
         while self.round_on:
             for current_player in self.players:
                 self.closed_stack_card = self.random_card(False)
                 self.turn(current_player)
+                self.check_line(current_player)
 
 
-mygame = game()
+mygame = game(2)
